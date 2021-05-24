@@ -1,3 +1,3 @@
 # SAMSUNG
 
-En este apartado, el equipo 4 va a subir sus entregables del proyecto final. 
+En este apartado, el equipo 1 va a subir sus entregables del proyecto final. 
