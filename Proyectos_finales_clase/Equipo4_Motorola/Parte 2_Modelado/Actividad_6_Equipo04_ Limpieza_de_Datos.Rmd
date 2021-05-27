@@ -1,0 +1,182 @@
+---
+title: "Limpieza_datos_Motorola"
+author: "Laura LR"
+date: "27/3/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+```
+
+```{r}
+motorola_datos<-read.csv("C:/Users/diego/Documents/FJ-21/1 Laboratorio de diseño y optimización de operaciones/Proyecto//Parte 2_Modelado/motorola_datos_sucios.csv")
+head(motorola_datos)
+```
+
+## Análisis General de los datos
+### Variables
+
+```{r}
+str(motorola_datos)
+```
+## Dimensión
+### Hay 14 variables, en esta base de datoshay 302, 561 filas y 14 columnas.
+```{r}
+dim(motorola_datos)
+```
+## Summary
+```{r}
+summary(motorola_datos)
+```
+
+## Análisis por variable
+### Hay 5 puntos de venta escritos de manera errónea, hay que corregirlos. 
+```{r}
+
+diferentes_pv<- motorola_datos %>% select(punto_de_venta)%>% unique()
+```
+```{r}
+
+motorola_datos$punto_de_venta <- str_replace(motorola_datos$punto_de_venta, "5 mayo zmm","5 de mayo zmm")
+motorola_datos$punto_de_venta <- str_replace(motorola_datos$punto_de_venta, "ace BENITO JUAREZ","ace benito juarez")
+motorola_datos$punto_de_venta <- str_replace(motorola_datos$punto_de_venta, "ace FRACChidalgo","ace fracchidalgo")
+motorola_datos$punto_de_venta <- str_replace(motorola_datos$punto_de_venta, "colosio hrmosillo","colosio hermosillo")
+motorola_datos$punto_de_venta <- str_replace(motorola_datos$punto_de_venta, "cruz dl sr","cruz del sur")
+```
+
+## Mes
+### Esta variable es numérica. Hay valores mal registrados (en lugar de número, son letras).Cambiar los 5 meses que están registrados con letras.
+
+```{r}
+diferentes_mes<- motorola_datos %>% select(mes)%>% unique()
+diferentes_mes
+```
+```{r}
+motorola_datos$mes <- str_replace(motorola_datos$mes, "FEB","2") %>% str_replace("JUL", "7")%>% str_replace("AGOSTO", "8")%>% str_replace("NOV", "11")%>% str_replace("DIC", "12")
+
+```
+
+```{r}
+motorola_datos$mes <-as.numeric(motorola_datos$mes)
+```
+
+```{r}
+diferentes_mes<- motorola_datos %>% select(mes)%>% unique()
+diferentes_mes
+```
+
+```{r}
+class(motorola_datos$mes)
+```
+## Año
+### La variable de año debe de seguir el formato de un valor númerico de 4 dígitos.
+```{r}
+diferente_anio<- motorola_datos %>% select(anio)%>% unique()
+diferente_anio
+```
+```{r}
+motorola_datos$anio <- str_replace(motorola_datos$anio, "18","2018") 
+```
+
+```{r}
+motorola_datos$anio <- str_replace(motorola_datos$anio, "202018","2018")
+```
+
+## Marca
+### Hay 5 marcas que están escritas de forma errónea, hay que corregirlas.
+
+```{r}
+diferentes_marca<- motorola_datos %>% select(marca)%>% unique()
+diferentes_marca
+```
+
+```{r}
+motorola_datos$marca <-tolower(motorola_datos$marca)
+```
+
+
+```{r}
+motorola_datos$marca <- str_replace(motorola_datos$marca, "motorola-motorola","motorola") 
+motorola_datos$marca <- str_replace(motorola_datos$marca, "mmotorola", "motorola") 
+```
+
+
+```{r}
+diferentes_marca<- motorola_datos %>% select(marca)%>% unique()
+diferentes_marca
+```
+
+## Zona
+### Hay 1 zona que esta mal escrita, hay que corregirlas.
+```{r}
+diferentes_marca<- motorola_datos %>% select(zona)%>% unique()
+diferentes_marca
+```
+
+```{r}
+motorola_datos$zona <- str_replace(motorola_datos$zona, "GOLFO DE MEX","golfo de mexico")
+```
+
+## Estado
+### Hay 3 estados más de los que en realidad existen, detectarlos y corregirlos.
+
+```{r}
+diferentes_edos<- motorola_datos %>% select(estado)%>% unique()
+diferentes_edos
+```
+
+```{r}
+motorola_datos$estado <- str_replace(motorola_datos$estado, "toluca","estado de mexico")%>% str_replace("acapulco", "guerrero")%>% str_replace("tehuacan", "puebla")
+```
+
+## Latitud
+### Hay 1 valor fuera de rango. Corregirlo
+
+```{r}
+summary(motorola_datos)
+```
+
+```{r}
+which(motorola_datos$latitud ==1793999.0)
+motorola_datos[337,]
+```
+```{r}
+motorola_datos[337,13] <- "17.93999"
+motorola_datos$latitud <- as.numeric(motorola_datos$latitud)
+motorola_datos[337,]
+```
+
+## Longitud
+### Hay 1 valor fuera de rango. Corregirlo
+```{r}
+which(motorola_datos$longitud ==-949106.0)
+
+```
+
+```{r}
+motorola_datos[337,14] <- "-94.9106"
+motorola_datos[337,]
+```
+
+```{r}
+motorola_datos$longitud <- as.numeric(motorola_datos$longitud)
+motorola_datos[337,]
+```
+
+## NA
+```{r}
+na_dataframe<- is.na(motorola_datos)
+#na_dataframe
+```
+
+```{r}
+class(na_dataframe)
+```
+
+
+```{r}
+write.csv(motorola_datos, "C:/Users/diego/Documents/FJ-21/1 Laboratorio de diseño y optimización de operaciones/Proyecto/Datos_Limpios.csv", row.names=FALSE)
+
+```
