@@ -1,0 +1,17 @@
+Metrica,Conjunto,Mes,modelo_base,dt_1_profundidad,dt_5_profundidad
+Mae,Entrenamiento,Julio,NaN,0.201664,0.175668
+Mae,Entrenamiento,Agosto,NaN,0.19463,0.181911
+Mae,Entrenamiento,Septiembre,NaN,0.206141,0.190814
+Mae,Entrenamiento,Octubre,NaN,0.208132,0.197458
+Mae,Entrenamiento,Noviembre,NaN,0.230232,0.222424
+Mae,Entrenamiento,Diciembre,NaN,0.276084,0.267176
+Mae,Entrenamiento,Enero,NaN,0.276029,0.259457
+Mae,Entrenamiento,Febrero,NaN,0.262131,0.250701
+Mae,Prueba,Agosto,NaN,0.260287,0.242052
+Mae,Prueba,Septiembre,0.265198,0.236754,0.267351
+Mae,Prueba,Octubre,0.24072,0.214104,0.223709
+Mae,Prueba,Noviembre,0.295083,0.300583,0.289474
+Mae,Prueba,Diciembre,0.505149,0.505345,0.515616
+Mae,Prueba,Enero,0.416853,0.334232,0.585301
+Mae,Prueba,Febrero,0.373438,0.164839,0.2179
+Mae,Prueba,Marzo,0.297489,0.081149,0.114798
