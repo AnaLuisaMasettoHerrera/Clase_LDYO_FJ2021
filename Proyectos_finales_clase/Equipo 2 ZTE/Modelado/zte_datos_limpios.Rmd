@@ -1,0 +1,164 @@
+---
+title: "Datos_Limpios"
+author: "César Cerón"
+date: "3/20/2021"
+output: html_document
+---
+
+```{r}
+library("tidyverse")
+```
+
+```{r}
+datos_zte <- read.csv("/Users/Cesar/Documents/César/TEC/Lab Diseño y Optimización de Op/zte_datos_sucios.csv")
+head(datos_zte)
+```
+
+```{r}
+dim(datos_zte)
+```
+
+```{r}
+str(datos_zte)
+```
+
+```{r}
+datos_zte$punto_de_venta <- as.factor(datos_zte$punto_de_venta)
+```
+
+```{r}
+levels(datos_zte$punto_de_venta)
+```
+
+```{r}
+pdeventas <- datos_zte %>% group_by(latitud) %>% select(punto_de_venta) %>% arrange(latitud) %>% unique()
+pdeventas
+```
+
+```{r}
+datos_zte$punto_de_venta <- str_replace(datos_zte$punto_de_venta, "1poniente", "1 poniente")
+```
+
+```{r}
+datos_zte$punto_de_venta <- str_replace(datos_zte$punto_de_venta, "agua zul", "agua azul")
+```
+
+```{r}
+datos_zte$punto_de_venta <- tolower(datos_zte$punto_de_venta)
+```
+
+```{r}
+datos_zte$punto_de_venta <- str_replace(datos_zte$punto_de_venta, "caucl", "caucel")
+```
+
+```{r}
+datos_zte$punto_de_venta <- str_replace(datos_zte$punto_de_venta, "operadora  voz jardin tuxtla", "ace tuxtla")
+```
+
+```{r}
+datos_zte$punto_de_venta <- str_replace(datos_zte$punto_de_venta, "ace tuxtla", "ace tuxtla")
+```
+
+```{r}
+mesdeventas <- datos_zte %>% select(mes) %>% unique()
+mesdeventas
+```
+
+```{r}
+datos_zte$mes <- str_replace(datos_zte$mes, "NOV", "11") %>% str_replace("AGOST", "8") %>% str_replace("DIC", "12") %>% str_replace("OCT", "10") %>% str_replace("SEPT", "9")
+```
+
+```{r}
+aniodeventa <- datos_zte %>% select(anio) %>% unique()
+aniodeventa
+```
+
+```{r}
+datos_zte$anio <- as.character(datos_zte$anio)
+```
+
+```{r}
+datos_zte$anio <- str_replace(datos_zte$anio, "20", "2020")
+```
+
+```{r}
+datos_zte$anio <- str_replace(datos_zte$anio, "202020", "2020")
+```
+
+```{r}
+datos_zte$anio <- str_replace(datos_zte$anio, "202019", "2019")
+```
+
+```{r}
+datos_zte$anio <- as.integer(datos_zte$anio)
+```
+
+```{r}
+marcasvendidas <- datos_zte %>% select(marca) %>% unique()
+marcasvendidas
+```
+
+```{r}
+datos_zte$marca <- tolower(datos_zte$marca)
+```
+
+```{r}
+datos_zte$marca <- str_replace(datos_zte$marca, "ztte", "zte") %>% str_replace("zte-zte", "zte") %>% str_replace("zzte", "zte")
+```
+
+```{r}
+zonadeventas <- datos_zte %>% select(zona) %>% unique()
+zonadeventas
+```
+
+```{r}
+datos_zte$zona <- str_replace(datos_zte$zona, "CENTRO OCCDENTE", "centro occidente")
+```
+
+```{r}
+estadodeventas <- datos_zte %>% select(estado) %>% unique()
+estadodeventas
+```
+
+```{r}
+datos_zte$estado <- str_replace(datos_zte$estado, "chetumal", "yucatan") %>% str_replace("monterrey", "nuevo leon") %>% str_replace("merida", "yucatan")
+```
+
+```{r}
+latitudpdeventa <- datos_zte %>% filter(latitud>33)
+latitudpdeventa
+```
+
+```{r}
+datos_zte$latitud <- as.character(datos_zte$latitud)
+```
+
+```{r}
+datos_zte$latitud <- str_replace(datos_zte$latitud, "1903991", "19.03991")
+```
+
+```{r}
+datos_zte$latitud <- as.numeric(datos_zte$latitud)
+```
+
+```{r}
+longitudpdeventa <- datos_zte %>% filter(longitud==-9824871)
+longitudpdeventa
+```
+
+```{r}
+datos_zte$longitud <- as.character(datos_zte$longitud)
+```
+
+```{r}
+datos_zte$longitud <- str_replace(datos_zte$longitud, "-9824871", "-98.24871")
+```
+
+```{r}
+datos_zte$longitud <- as.numeric(datos_zte$longitud)
+```
+
+```{r}
+write.csv(datos_zte, file = "zte_datos_limpios.csv", row.names = FALSE)
+```
+

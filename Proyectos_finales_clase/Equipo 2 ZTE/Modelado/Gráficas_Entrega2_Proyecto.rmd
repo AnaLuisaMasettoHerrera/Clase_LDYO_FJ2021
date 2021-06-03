@@ -1,0 +1,301 @@
+---
+title: "Proyecto_datos"
+author: "Nancy"
+date: "1/3/2021"
+output: html_document
+---
+#Nuestro equipo está conformado por: Nancy Escamilla, César Iván Trejo y Carlos Raúl Muciño
+
+#Introducción: 
+
+#Hoy en día el uso de los teléfonos celulares se ha vuelto parte de la vida cotidiana de todas las personas, por ello el giro de estas grandes empresas es uno de los más importantes en todo el mundo, estas empresas deben ser lo suficiente capaces para innovar productos de alta calidad, además que estos cumplan con gustos, necesidades e intereses diferentes de los consumidores y tener estos disponibles en tiempo y forma para los clientes.
+#Es por ello que en este proyecto nos enfocaremos en la predicción de la demanda de la empresa ZTE, la cual resulta ser importante para la compañía debido a que está ayudara comprender a gran escala el negocio y adecuar ciertas decisiones para ser una empresa eficiente. Para lograr ello se utilizará la herramienta RStudio que nos permitirá realizar el procesamiento de una base de datos la cual presenta información importante de la compañía ZTE, esto con el objetivo de comprender la predicción de las demandas de ZTE.
+
+```{r}
+library(tidyverse)
+```
+#Imprimir datos(A la derecha dice que tengo 24089 observaciones y 14 variables)
+```{r}
+datos_zte <- read.csv("C:/Users/neses/OneDrive/Documentos/Labo de diseño y optimizacion/equipo_2_zte_datos.csv")
+head(datos_zte) 
+```
+#Imprimir datos 
+```{r}
+datos_zte
+```
+```{r}
+dim(datos_zte)
+```
+
+```{r}
+str(datos_zte)
+```
+
+```{r}
+datos_zte$punto_de_venta <- as.factor(datos_zte$punto_de_venta)
+```
+
+```{r}
+levels(datos_zte$punto_de_venta)
+```
+#Cambiar los puntos de venta que estan mal escritos.
+```{r}
+pdeventas <- datos_zte %>% group_by(latitud) %>% select(punto_de_venta) %>% arrange(latitud) %>% unique()
+pdeventas
+```
+
+```{r}
+datos_zte$punto_de_venta <- str_replace(datos_zte$punto_de_venta, "1poniente", "1 poniente")
+```
+
+```{r}
+datos_zte$punto_de_venta <- str_replace(datos_zte$punto_de_venta, "agua zul", "agua azul")
+```
+
+```{r}
+datos_zte$punto_de_venta <- tolower(datos_zte$punto_de_venta)
+```
+
+```{r}
+datos_zte$punto_de_venta <- str_replace(datos_zte$punto_de_venta, "caucl", "caucel")
+```
+
+```{r}
+datos_zte$punto_de_venta <- str_replace(datos_zte$punto_de_venta, "operadora  voz jardin tuxtla", "ace tuxtla")
+```
+
+```{r}
+datos_zte$punto_de_venta <- str_replace(datos_zte$punto_de_venta, "ace tuxtla", "ace tuxtla")
+```
+
+#Fecha
+```{r}
+fechadeventa <- datos_zte %>% select(fecha) %>% unique()
+fechadeventa
+```
+```{r}
+dim(fechadeventa)
+```
+#Cambiar los 5 meses que están registrados con letras.
+```{r}
+mesdeventas <- datos_zte %>% select(mes) %>% unique()
+mesdeventas
+```
+
+```{r}
+datos_zte$mes <- str_replace(datos_zte$mes, "NOV", "11") %>% str_replace("AGOST", "8") %>% str_replace("DIC", "12") %>% str_replace("OCT", "10") %>% str_replace("SEPT", "9")
+```
+```{r}
+dim(mesdeventas)
+```
+```{r}
+datos_zte$mes <- as.integer(datos_zte$mes)
+```
+
+#La variable de año debe de seguir el formato de un valor numérico de 4 dígitos.
+#Los unicos datos de años registrados que tenemos son 2019, 2020, por lo que todos los datos que encontremos erroneos tenemos que analizarlos y cambiarlos a estas fechas.
+```{r}
+aniodeventa <- datos_zte %>% select(anio) %>% unique()
+aniodeventa
+```
+
+```{r}
+datos_zte$anio <- as.character(datos_zte$anio)
+```
+
+```{r}
+datos_zte$anio <- str_replace(datos_zte$anio, "20", "2020")
+```
+
+```{r}
+datos_zte$anio <- str_replace(datos_zte$anio, "202020", "2020")
+```
+
+```{r}
+datos_zte$anio <- str_replace(datos_zte$anio, "202019", "2019")
+```
+
+```{r}
+datos_zte$anio <- as.integer(datos_zte$anio)
+```
+#Numero de ventas
+```{r}
+numdeventas <- datos_zte %>% select(num_ventas) %>% unique()
+numdeventas
+```
+```{r}
+dim(numdeventas)
+```
+#sku
+```{r}
+skuventas <- datos_zte %>% select(sku) %>% unique()
+skuventas
+```
+```{r}
+dim(skuventas)
+```
+
+#Marca: Hay 5 marcas que están escritas de forma errónea.
+```{r}
+marcasvendidas <- datos_zte %>% select(marca) %>% unique()
+marcasvendidas
+```
+
+```{r}
+datos_zte$marca <- tolower(datos_zte$marca)
+```
+
+```{r}
+datos_zte$marca <- str_replace(datos_zte$marca, "zte", "ZTE") %>% str_replace("zte-zte", "ZTE") %>% str_replace("zZte", "ZTE") %>% str_replace("ztte", "ZTE") %>% str_replace("ZTE-ZTE", "ZTE")%>% str_replace("zzte", "ZTE") %>% str_replace("ZTE-zte", "ZTE")
+```
+
+#Gamma
+```{r}
+gammaventas <- datos_zte %>% select(gamma) %>% unique()
+gammaventas
+```
+```{r}
+dim(gammaventas)
+```
+
+#Costo promedio
+```{r}
+costopromventas <- datos_zte %>% select(costo_promedio) %>% unique()
+costopromventas
+```
+```{r}
+dim(costopromventas)
+```
+
+#Zona mal escrita
+```{r}
+zonadeventas <- datos_zte %>% select(zona) %>% unique()
+zonadeventas
+```
+
+```{r}
+datos_zte$zona <- str_replace(datos_zte$zona, "CENTRO OCCDENTE", "centro occidente")
+```
+
+#Estado: Hay 3 estados más de los que en realidad existen
+```{r}
+estadodeventas <- datos_zte %>% select(estado) %>% unique()
+estadodeventas
+```
+
+```{r}
+datos_zte$estado <- str_replace(datos_zte$estado, "chetumal", "yucatan") %>% str_replace("monterrey", "nuevo leon") %>% str_replace("merida", "yucatan")
+```
+#Ciudad
+```{r}
+ciudadventas <- datos_zte %>% select(ciudad) %>% unique()
+ciudadventas
+```
+```{r}
+dim(ciudadventas)
+```
+
+#Latitud: Hay 1 valor fuera de rango.
+```{r}
+latitud_total <- datos_zte %>% select(latitud) %>% unique()
+latitud_total
+```
+```{r}
+dim(latitud_total)
+```
+
+```{r}
+latitudpdeventa <- datos_zte %>% filter(latitud>33)
+latitudpdeventa
+```
+
+```{r}
+datos_zte$latitud <- as.character(datos_zte$latitud)
+```
+
+```{r}
+datos_zte$latitud <- str_replace(datos_zte$latitud, "1903991", "19.03991")
+```
+
+```{r}
+datos_zte$latitud <- as.numeric(datos_zte$latitud)
+```
+
+#Longitud: Hay 1 valor fuera de rango.
+
+```{r}
+longitud_total <- datos_zte %>% select(longitud) %>% unique()
+longitud_total
+```
+```{r}
+dim(longitud_total)
+```
+
+```{r}
+longitudpdeventa <- datos_zte %>% filter(longitud==-9824871)
+longitudpdeventa
+```
+
+```{r}
+datos_zte$longitud <- as.character(datos_zte$longitud)
+```
+
+```{r}
+datos_zte$longitud <- str_replace(datos_zte$longitud, "-9824871", "-98.24871")
+```
+
+```{r}
+datos_zte$longitud <- as.numeric(datos_zte$longitud)
+```
+
+```{r}
+write.csv(datos_zte, file = "zte_datos_limpios.csv", row.names = FALSE)
+```
+
+
+#Graficas
+
+#Ventas por estados 
+```{r, fig.width= 60, fig.height=15}
+im_pg6 <- ggplot(datos_zte, aes(x = forcats::fct_infreq(estado), fill = estado)) +
+  geom_bar() + 
+  theme_classic()+
+  xlab("Estados de ventas") + 
+  ylab("Frecuencia de ventas")+
+  labs(title="Ventas en Estados")+
+   theme(axis.text=element_text(size=20),
+        axis.title=element_text(size=20,face="italic"),
+        title = element_text(size=20,face="italic"))
+
+im_pg6
+```
+#SKU(ventas de productos por codigos de SKU, para saber que codigo es el mas vendido)
+```{r, fig.width= 60, fig.height=15}
+im_pg7 <- ggplot(datos_zte, aes(x = forcats::fct_infreq(sku), fill = sku)) +
+  geom_bar() + 
+  theme_classic()+
+  xlab("sku") + 
+  ylab("Frecuencia de ventas")+
+  scale_fill_manual(values=c("darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue","darkblue"))+
+  theme(axis.text=element_text(size=20),
+        axis.title=element_text(size=30,face="italic"),
+        title = element_text(size=30,face="italic"))+
+  labs(title="Frecuencia de ventas sku")
+
+im_pg7
+```
+#Zonas vs costos promedios en los que se venden los dispositivos(para saber cuanto varian los costos promedios en cada zona)
+```{r, fig.width= 20, fig.height=10}
+im_pg8 <-ggplot(datos_zte,aes(x = zona, y = costo_promedio))+geom_point()
+im_pg8
+```
+
+#Del SKU mas vendido como han ido cambiando los costos promedios a travez de los años 2019 y 2020
+```{r}
+im_pg10 <- datos_zte%>%filter(sku=="NZV8MNG")
+ggplot(datos_zte,aes(x = costo_promedio , y = anio))+geom_point()
+im_pg10
+```
+
+
+

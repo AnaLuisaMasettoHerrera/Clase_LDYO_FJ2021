@@ -1,0 +1,243 @@
+---
+title: "Datos_Completos"
+author: "César Cerón"
+date: "4/5/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+library("tidyverse")
+```
+
+```{r}
+datos_zte <- read.csv("/Users/Cesar/Documents/César/TEC/Lab Diseño y Optimización de Op/zte_datos_limpios.csv")
+head(datos_zte)
+```
+
+```{r}
+dim(datos_zte)
+```
+
+
+```{r}
+str(datos_zte)
+```
+
+```{r}
+summary(datos_zte)
+```
+
+```{r}
+datos_zte$punto_de_venta <- as.character(datos_zte$punto_de_venta) #Caracter o factor 
+datos_zte$fecha <- as.Date(datos_zte$fecha)
+datos_zte$mes <- as.numeric(datos_zte$mes) #pueden ser factor / para usos prácticos de este ejercicio conviene que este en número 
+datos_zte$anio <- as.numeric(datos_zte$anio) #pueden ser factor / para usos prácticos de este ejercicio conviene que este en número
+datos_zte$sku <- as.character(datos_zte$sku) #Caracter o factor 
+datos_zte$marca <- as.character(datos_zte$marca) #Caracter o factor
+```
+
+```{r}
+str(datos_zte)
+```
+
+
+```{r}
+pdv_id <- datos_zte %>% select(punto_de_venta) %>% unique() %>% arrange()
+head(pdv_id)
+```
+
+#Se utiliza para crear columnas
+```{r}
+pdv_id$pdv_id <- as.character(seq.int(nrow(pdv_id)))
+head(pdv_id)
+```
+
+```{r}
+mes_id <- datos_zte%>%select(mes,anio)%>%unique()%>%arrange(anio,mes)
+mes_id
+```
+
+```{r}
+mes_id$mes_id <- as.character(seq.int(1,10,1))
+mes_id
+```
+
+```{r}
+sku_id <- datos_zte%>%select(sku)%>%unique()%>%arrange()
+head(sku_id)
+```
+
+```{r}
+sku_id$sku_id <- as.character(seq.int(nrow(sku_id)))
+head(sku_id)
+```
+
+```{r}
+datos_zte%>%select(marca)%>%unique()
+```
+
+```{r}
+head(datos_zte[,c("gamma","sku")] %>% 
+  mutate(contador = 1) %>% 
+  group_by(gamma, sku) %>% 
+  summarise(repeticiones = sum(contador)))
+```
+
+```{r}
+dim(datos_zte)
+```
+
+#left_join agrega la columna a nuestro conjunto de datos
+```{r}
+datos_zte <- left_join(datos_zte, pdv_id, by="punto_de_venta")
+head(datos_zte)
+```
+
+```{r}
+datos_zte <- left_join(datos_zte, sku_id, by="sku")
+datos_zte <- left_join(datos_zte, mes_id, by=c("mes","anio"))
+head(datos_zte)
+```
+
+#group_by agrupa las ventas que se hicieron en el mismo punto de venta, el mismo mes del mismo producto
+#summarise junta en una nueva columna (ventas_totales) el num_ventas si se cumplen las condiciones de arriba
+```{r}
+datos_zte <- datos_zte %>% 
+  #quitamos fecha porque vamos a hacer el análisis por mes 
+  group_by(pdv_id, sku_id, mes_id)%>% 
+  summarise(ventas_totales = sum(num_ventas))
+
+head(datos_zte)
+```
+
+```{r}
+dim(datos_zte)
+```
+
+```{r}
+names(datos_zte)
+```
+
+```{r}
+nrow(mes_id)
+
+nrow(sku_id)
+
+nrow(pdv_id)
+```
+
+```{r}
+nrow(mes_id)*nrow(sku_id)*nrow(pdv_id)
+```
+
+```{r}
+datos_completos <- merge(mes_id, sku_id)
+datos_completos <- merge(datos_completos, pdv_id)
+head(datos_completos)
+```
+
+```{r}
+datos_completos <- datos_completos %>% select(pdv_id, mes_id, sku_id)
+head(datos_completos)
+```
+
+```{r}
+datos_completos <- left_join(datos_completos, datos_zte, by=c("pdv_id","mes_id","sku_id"))
+head(datos_completos)
+```
+
+```{r}
+datos_completos[is.na(datos_completos)] <- 0 
+head(datos_completos)
+```
+
+
+#Se hablara de un concepto de Validación Cruzada para Series de Tiempo; sin embargo, en términos sencillos, cuando se aplica un modelo de aprendizaje de máquina, se necesitan 2 conjuntos (entrenamiento y prueba), si mi conjunto de entrenamiento llegara hasta el mes_id:9 y el mes_id:10 correspondiera a mi conjunto de prueba, este no lo puedo utilizar porque necesariamente, para evaluar el desempeño en este conjunto, es necesario contar con la variable y, la cual no tenemos.
+```{r}
+library(dplyr)
+datos_completos <- datos_completos %>% 
+  group_by(pdv_id, sku_id) %>% 
+  mutate(y_ventas_siguiente_mes = lead(ventas_totales,n = 1L, default = NA)) 
+
+head(datos_completos)
+```
+
+```{r}
+datos_completos <- datos_completos %>% filter(mes_id <= 9)
+head(datos_completos)
+```
+
+```{r}
+mes_pdv <-datos_completos%>%
+  group_by(mes_id, pdv_id)%>%
+  summarise(ventas_totales_en_tienda_de_cada_mes=sum(ventas_totales), 
+            ventas_promedio_en_tienda_de_cada_mes = mean(ventas_totales))
+
+mes_pdv
+```
+#En el mes ____ y en el punto de venta ______, se tuvieron ______ ventas totales y se obtuvo un promedio de ventas de ________ (23/34 productos)
+
+
+```{r}
+mes_sku <-datos_completos%>%
+  group_by(mes_id, sku_id)%>%
+  summarise(ventas_totales_en_tienda_de_cada_sku=sum(ventas_totales), 
+            ventas_promedio_en_tienda_de_cada_sku = mean(ventas_totales))
+
+mes_sku
+```
+#En el mes ____ y en el punto de venta ______, se tuvieron ______ ventas totales y se obtuvo un promedio de ventas de ________ (3778/1900 productos)
+
+```{r}
+datos_completos <- left_join(datos_completos, mes_pdv, by=c("mes_id", "pdv_id"))
+datos_completos <- left_join(datos_completos, mes_sku, by=c("mes_id", "sku_id"))
+head(datos_completos)
+```
+
+```{r}
+datos_completos <- datos_completos %>%
+  group_by(pdv_id, sku_id)%>%
+  mutate(
+    ventas_totales_1_mes_pasado = lag(ventas_totales, n=1), 
+    ventas_totales_2_meses_pasados = lag(ventas_totales, n=2), 
+    ventas_totales_3_meses_pasados = lag(ventas_totales, n=3), 
+    
+    ventas_totales_tienda_y_mes_del_mes_pasado = lag(ventas_totales_en_tienda_de_cada_mes, n=1), 
+    ventas_totales_tienda_y_mes_2_pasado = lag(ventas_totales_en_tienda_de_cada_mes, n=2),
+    ventas_totales_tienda_y_mes_3_pasado = lag(ventas_totales_en_tienda_de_cada_mes, n=3),
+    
+    ventas_promedio_tienda_y_mes_del_mes_pasado = lag(ventas_promedio_en_tienda_de_cada_mes, n=1), 
+    ventas_promedio_tienda_y_mes_2_pasado = lag(ventas_promedio_en_tienda_de_cada_mes, n=2),
+    ventas_promedio_tienda_y_mes_3_pasado = lag(ventas_promedio_en_tienda_de_cada_mes, n=3),
+  
+    ventas_totales_tienda_y_sku_del_mes_pasado = lag(ventas_totales_en_tienda_de_cada_sku, n=1), 
+    ventas_totales_tienda_y_sku_2_pasado = lag(ventas_totales_en_tienda_de_cada_sku, n=2),
+    ventas_totales_tienda_y_sku_3_pasado = lag(ventas_totales_en_tienda_de_cada_sku, n=3),
+    
+    ventas_promedio_tienda_y_sku_del_mes_pasado = lag(ventas_promedio_en_tienda_de_cada_sku, n=1), 
+    ventas_promedio_tienda_y_sku_2_pasado = lag(ventas_promedio_en_tienda_de_cada_sku, n=2),
+    ventas_promedio_tienda_y_sku_3_pasado = lag(ventas_promedio_en_tienda_de_cada_sku, n=3)) 
+
+head(datos_completos,20)
+```
+
+```{r}
+library(zoo)
+```
+
+
+```{r}
+datos_completos<-na.locf(datos_completos, fromLast = TRUE) 
+head(datos_completos)
+```
+
+```{r}
+write.csv(datos_completos, file="datos_completos.csv", row.names = FALSE)
+```
+
+#left_join(): Agrega una columna a nuestro conjunto de datos creandola de las combinaciones posibles entre columnas o de los distintos datos de una sola columna.
+#merge(): Sirve para incluir columnas a un conjunto de datos
+
+#Cambiamos algunas variables porque de esta manera se pueden agrupar de manera más sencilla y el indice nos permite tenerlo de manera más simple sin modificar nuestros datos.
