@@ -1,0 +1,218 @@
+---
+title: "Huawei_Equipo5"
+author: "Brenda Rubio Maria Gutierrez Rafael Loyola Carlos Muñoz"
+date: "1/3/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r}
+library (tidyverse)
+```
+# Integrantes
+Brenda Aurora Rubio Villaseñor A01364693
+Carlos Muñoz Villegas A01363608
+María Fernanda Guitierrez A01367761
+Rafael Loyola Franco A01365017 
+
+# Introducción
+El equipo esta conformado por 4 integrantes, los cuales fueron mencionadoS anteriormente en el punto de integrates.
+
+Este equipo esta analizando la empresa de Huawei, la cual esta dedicada al desarrollo de tecnología, en este caso el proyecto esta  enfocado en analizar la predicción de la demanda de los productos de telefonía que se venderán en distintos puntos de venta.
+
+Para poder analizar los datos fue necesario hacer una limpieza de las variables ingresadas incorrectamente.
+
+# Análisis general de los datos
+Los datos que se presentan en este proyecto son un total de 369617 observaciones de 14 variables, en las cuales se incluyen Puntos de venta (caracter), Fecha (caracter), Mes (numero), Anio (numero), Número de ventas (Entero), SKU (caracter), Marca (caracter), Gamma (caracter), Costo promedio (número), Zona (caracter), Estado (caracter), Ciudad (caracter), Latitud (número) y Longitud (número).  # 
+
+## Detección problemas de calidad
+
+Al hacer una revisión extensa de los datos pudimos observar que en algunas variables había algunos datos que fueron ingresados de la forma incorrecta lo cual haría imposible trabajar con esta base de datos en el futuro.
+En la variable punto de venta se encontraron 5 diferentes puntos que fueron ingresados de forma incorrecta los cuales son y se corrieron de la siguiente manera:
+ace alhondga- ace alhondiga
+ACE MEGA iguala - ace mega iguala
+acr centroapizacotlx - acr centroapizacotl
+acr CENTROapizacotl - acr centroapizacotl
+mgn aleira gdl - mgn alegra gdl
+ 
+En la variable de mes hubo un error al ingresar los datos. En algunas ocasiones se ingresó la abreviatura del mes como por ejemplo: SEPT  y en otras ocasiones se ingresó de forma correcta como es el número que corresponde a cada mes. Fueron corregidas de la siguiente forma: 
+JUN-7
+JUL-7
+SEPT-9
+DIC-12
+MAR -3
+ 
+La variable  año debe de ser ingresada con el formato de 4 dígitos. Esta variable fue modificada de la siguiente manera: 
+“18” “2018”
+En la variable marca se encontraron 5 marcas que no fueron ingresadas de la forma correcta las cuales  fueron:
+Huawei-huawei
+HUAWEI-huaweI
+hHuawei- huaweI
+hhuawei-huawei
+En la variable de Zona hay una variable que no fue ingresada de forma correcta la cual es: 
+CENTRO SUR-	centro sur	
+La variable estado tampoco fue ingresada de forma correcta. Existen tres registros más de estadosno las cuales son: 
+“merida” “yucatan”
+“la paz” “baja califronia sur”
+“metepec” “estado de mexico”
+ 
+Tanto en las variables de longitud y latitud se encontraron 2 valores los cuales fueron encontrados fuera de rango y fueron corregidos de la siguiente manera: 
+Longitud
+-9949052-99.49052
+Latitud
+1941515-19.41515
+ 
+ 
+
+
+```{r}
+huawei_datos <- read.csv("C:/Users/rafa/Documents/7 mo/Lab optimizacion/equipo_5_huawei_datos_sucios.csv")
+head(huawei_datos)
+```
+
+```{r}
+dim(huawei_datos)
+```
+
+```{r}
+str(huawei_datos)
+```
+```{r}
+summary(huawei_datos)
+```
+
+Hay problemas con el año, por ejemplo, en el "Resumen" se observa que hay un valor que está como 18 y no 2018.
+
+# Puntos de Venta
+
+```{r}
+huawei_datos$punto_de_venta <- str_replace(huawei_datos$punto_de_venta, "1poniente", "1 poniente") %>%
+str_replace("ace alhondga", "ace alhondiga") %>%
+str_replace("ACE MEGA iguala", "ace mega iguala") %>%
+str_replace("acr centroapizacotlx", "acr centroapizacotl") %>%
+str_replace("acr CENTROapizacotl", "acr centroapizacotl") %>%
+str_replace("mgn aleira gdl", "mgn alegra gdl")
+```
+```{r}
+tipo_punto_venta <- huawei_datos %>% select(punto_de_venta) %>% unique()
+tipo_punto_venta
+```
+# Mes
+
+```{r}
+huawei_datos$mes <- str_replace(huawei_datos$mes,"JUN","6")%>% str_replace("JUL","7")%>%str_replace("SEPT","9")%>%str_replace("DIC","12")%>%str_replace("MAR","3")
+```
+```{r}
+huawei_datos$mes <- str_replace(huawei_datos$mes,"9 ","9")
+```
+
+```{r}
+tipo_mes <- huawei_datos %>% select(mes) %>% unique()
+tipo_mes
+```
+
+
+```{r}
+huawei_datos$mes<- as.numeric(huawei_datos$mes)
+```
+
+
+
+# Año
+
+```{r}
+huawei_datos$anio <- str_replace(huawei_datos$anio, "18", "2018")
+
+
+```
+
+```{r}
+huawei_datos$anio <- str_replace(huawei_datos$anio, "202018", "2018")
+
+
+```
+```{r}
+huawei_datos$anio <- as.numeric(huawei_datos$anio)
+```
+```{r}
+tipo_anio <- huawei_datos %>% select(anio) %>% unique()
+tipo_anio
+```
+# Marca
+
+```{r}
+huawei_datos$marca <- str_replace(huawei_datos$marca, "Huawei-huawei", "huawei") %>%
+str_replace("Huawei", "huawei") %>%
+str_replace("HUAWEI", "huawei") %>%
+str_replace("hHuawei", "huawei") %>%
+str_replace("hhuawei", "huawei")
+```
+
+```{r}
+tipo_marca <- huawei_datos %>% select(marca) %>% unique()
+tipo_marca
+```
+# Estado 
+
+```{r}
+huawei_datos$estado <- str_replace(huawei_datos$estado, "la paz", "baja california sur") %>%
+str_replace("metepec", "estado de mexico") %>%
+str_replace("merida", "yucatan") 
+
+```
+```{r}
+tipo_estado <- huawei_datos %>% select(estado) %>% unique()
+tipo_estado
+```
+# Zona
+```{r}
+huawei_datos$zona <- str_replace(huawei_datos$zona, "CENTRO SUR", "centro sur")
+```
+```{r}
+huawei_datos$zona <- str_replace(huawei_datos$zona, "centro sur ", "centro sur")
+```
+```{r}
+tipo_zona <- huawei_datos %>% select(zona) %>% unique()
+tipo_zona
+```
+```{r}
+huawei_datos$zona<- tolower(huawei_datos$zona)
+```
+
+# Latitud
+```{r}
+huawei_datos$latitud <- as.character(huawei_datos$latitud)
+huawei_datos$latitud <- str_replace(huawei_datos$latitud, "1941515", "19.41515")
+```
+```{r}
+tipo_latitud <- huawei_datos %>% select(latitud) %>% summary()
+tipo_latitud
+```
+
+```{r}
+huawei_datos$latitud <- as.numeric(huawei_datos$latitud)
+```
+```{r}
+ tipo_latitud<- huawei_datos %>% select(latitud) %>% summary()
+tipo_latitud
+```
+
+# Longitud
+
+```{r}
+huawei_datos$longitud <- as.character(huawei_datos$longitud)
+huawei_datos$longitud <- str_replace(huawei_datos$longitud, "-9949052", "-99.49052")
+```
+
+```{r}
+huawei_datos$longitud <- as.numeric(huawei_datos$longitud)
+```
+```{r}
+tipo_longitud <- huawei_datos %>% select(longitud) %>% summary()
+tipo_longitud
+```
+```{r}
+write.csv(huawei_datos, file = "huawei_databse.csv", row.names = FALSE)
+getwd()
+```

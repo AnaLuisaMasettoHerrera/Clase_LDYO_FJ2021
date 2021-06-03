@@ -1,0 +1,330 @@
+---
+title: "Ingenieria de caracteristicas"
+author: "Rafael Loyola"
+date: "5/4/2021"
+output: html_document
+---
+
+```{r}
+huawei_datos_limpios <- read.csv("C:/Users/rafa/Documents/7 mo/Lab optimizacion/huawei_databse_limpios.csv")
+head(huawei_datos_limpios)
+```
+## 0. Lectura de huawei_datos_limpios 
+```{r}
+library(tidyverse)
+```
+
+
+
+
+
+```{r}
+dim(huawei_datos_limpios)
+```
+
+```{r}
+str(huawei_datos_limpios)
+```
+
+```{r}
+summary(huawei_datos_limpios)
+```
+
+```{r}
+huawei_datos_limpios$punto_de_venta <- as.character(huawei_datos_limpios$punto_de_venta) #Caracter o factor 
+huawei_datos_limpios$fecha <- as.Date(huawei_datos_limpios$fecha)
+huawei_datos_limpios$mes <- as.numeric(huawei_datos_limpios$mes) #pueden ser factor / para usos prácticos de este ejercicio conviene que este en número 
+huawei_datos_limpios$anio <- as.numeric(huawei_datos_limpios$anio) #pueden ser factor / para usos prácticos de este ejercicio conviene que este en número
+huawei_datos_limpios$sku <- as.character(huawei_datos_limpios$sku) #Caracter o factor 
+huawei_datos_limpios$marca <- as.character(huawei_datos_limpios$marca) #Caracter o factor 
+huawei_datos_limpios$sku <- as.character(huawei_datos_limpios$sku) #Caracter o factor 
+```
+
+## 1. Índices - manejo más sencillo de variables cualitativas más importantes 
+
+### Paso 1. Crear Índices por separado 
+
+#### Índice - Tienda (1 poniente:1, 5 de mayo zmm:2)
+
+```{r}
+pdv_id <- huawei_datos_limpios%>%select(punto_de_venta)%>%unique()%>%arrange()
+head(pdv_id)
+```
+
+```{r}
+pdv_id$pdv_id <- as.character(seq.int(nrow(pdv_id)))
+head(pdv_id)
+```
+
+#### Fecha - No porque lo que nos interesa es el pronóstico por mes 
+
+#### Mes - ¡CUIDADO! Número distintivo por mes -> Índice disintivo por periodo de registro 
+
+```{r}
+mes_id <- huawei_datos_limpios%>%select(mes,anio)%>%unique()%>%arrange(anio,mes)
+mes_id 
+```
+
+```{r}
+mes_id$mes_id <- as.character(seq.int(0,9,1))
+mes_id
+```
+
+#### SKU 
+
+```{r}
+sku_id <- huawei_datos_limpios%>%select(sku)%>%unique()%>%arrange()
+head(sku_id)
+```
+
+```{r}
+sku_id$sku_id <- as.character(seq.int(nrow(sku_id)))
+head(sku_id)
+```
+
+#### Marca no - solo hay 1 
+
+```{r}
+huawei_datos_limpios%>%select(marca)%>%unique()
+```
+
+#### Gamma no - solo hay una gamma asignada a cada producto 
+
+```{r}
+head(huawei_datos_limpios[,c("gamma","sku")] %>% 
+  mutate(contador = 1) %>% 
+  group_by(gamma, sku) %>% 
+  summarise(repeticiones = sum(contador)))
+```
+
+#### Costo promedio no - No es variable cualitativa 
+
+__Extra:__ El costo promedio esta implícito en la gamma. 
+
+  costo_promedio <= 5000: "baja"
+  
+  costo_promedio > 5000 & costo_promedio<=10000: "media"
+
+  costo_promedio > 10000 & costo_promedio<=15000: "alta"
+
+  costo_promedio > 15000: "premium"
+
+#### Zona no - El punto de venta tiene implícita esta información 
+
+#### Estado no - El punto de venta tiene implícita esta información  
+
+#### Ciudad no - El punto de venta tiene implícita esta información 
+
+#### Latitud y longitud no - El punto de venta tiene implícita esta información 
+
+#### Ventas_totales - No es una variable cualitativa que se pueda indexar 
+
+### Paso 2. En huawei_datos_limpios agregar nuevas columnas con índices 
+
+```{r}
+dim(huawei_datos_limpios)
+```
+
+```{r}
+huawei_datos_limpios <- left_join(huawei_datos_limpios, pdv_id, by="punto_de_venta")
+head(huawei_datos_limpios) 
+```
+
+```{r}
+huawei_datos_limpios <- left_join(huawei_datos_limpios, sku_id, by="sku")
+huawei_datos_limpios <- left_join(huawei_datos_limpios, mes_id, by=c("mes","anio"))
+head(huawei_datos_limpios)
+```
+
+## 2. Agrupar: Ventas totales 
+
+__¿Hay más de una venta del mismo producto, en el mismo punto de venta, en la misma fecha (mes)? __
+
+__Sugerencia:__ 
+
+Quitar variables con información adicional que esta implícita en: punto de venta, 
+
+```{r}
+huawei_datos_limpios <- huawei_datos_limpios %>% 
+  #quitamos fecha porque vamos a hacer el análisis por mes 
+  group_by(pdv_id, sku_id, mes_id)%>% 
+  summarise(ventas_totales = sum(num_ventas))
+
+head(huawei_datos_limpios)
+```
+
+```{r}
+#huawei_datos_limpios agrupados - ahora sabemos cuántas unidades de producto se vendieron en total en cada punto de venta en cada fecha. 
+dim(huawei_datos_limpios)
+```
+
+```{r}
+names(huawei_datos_limpios)
+```
+
+## 3. Completar Series de Tiempo 
+
+Construimos 3 conjuntos nuevos con índices 
+
+```{r}
+nrow(mes_id)
+```
+
+```{r}
+nrow(sku_id)
+```
+
+```{r}
+nrow(pdv_id)
+```
+
+```{r}
+#Combinaciones 
+nrow(mes_id)*nrow(sku_id)*nrow(pdv_id)
+```
+
+```{r}
+#Crear dataset con combinaciones
+huawei_datos_limpios_completos <- merge(mes_id, sku_id)
+huawei_datos_limpios_completos <- merge(huawei_datos_limpios_completos, pdv_id)
+head(huawei_datos_limpios_completos)
+```
+
+```{r}
+huawei_datos_limpios_completos <- huawei_datos_limpios_completos %>% select(pdv_id, mes_id, sku_id)
+head(huawei_datos_limpios_completos)
+```
+
+
+```{r}
+huawei_datos_limpios_completos <- left_join(huawei_datos_limpios_completos, huawei_datos_limpios, by=c("pdv_id","mes_id","sku_id"))
+head(huawei_datos_limpios_completos)
+```
+
+```{r}
+huawei_datos_limpios_completos[is.na(huawei_datos_limpios_completos)] <- 0 
+head(huawei_datos_limpios_completos)
+```
+
+
+## 4. Variable respuesta - Ventas del siguiente mes 
+
+__EXTRA (más adelante):__ Remover el conjunto de huawei_datos_limpios correspondientes al índice de mes 9 
+
+¿Por qué? 
+
+Más adelante, se va a hablar de un concepto de Validación Cruzada para Series de Tiempo; sin embargo, en términos sencillos, cuando se aplica un modelo de aprendizaje de máquina, se necesitan 2 conjuntos (entrenamiento y prueba), si mi conjunto de entrenamiento llegara hasta el mes_id:8 y el mes_id:9 correspondiera a mi conjunto de prueba, este no lo puedo utilizar porque necesariamente, para evaluar el desempeño en este conjunto, es necesario contar con la variable y, la cual no tenemos. 
+
+```{r}
+library(dplyr)
+huawei_datos_limpios_completos <- huawei_datos_limpios_completos %>% 
+  group_by(pdv_id, sku_id) %>% 
+  mutate(y_ventas_siguiente_mes = lead(ventas_totales,n = 1L, default = NA)) 
+
+head(huawei_datos_limpios_completos)
+```
+
+```{r}
+huawei_datos_limpios_completos <- huawei_datos_limpios_completos %>% filter(mes_id <= 8)
+head(huawei_datos_limpios_completos)
+```
+
+## 5. Crear nuevas características: Conteos, promedios y rezagos 
+
+### Paso 1. Creamos las características de ventas promedio por mes, tienda y producto y ventas totales con las cuáles se crean las características que necesitamos de manera rezagada más adelante. 
+
+```{r}
+#conteos y promedios por duplas de características 
+
+mes_pdv <-huawei_datos_limpios_completos%>%
+  group_by(mes_id, pdv_id)%>%
+  summarise(ventas_totales_en_tienda_de_cada_mes=sum(ventas_totales), 
+            ventas_promedio_en_tienda_de_cada_mes = mean(ventas_totales))
+
+mes_pdv
+
+#En el mes ____ y en el punto de venta ______, se tuvieron ______ ventas totales y se obtuvo un promedio de ventas de ________ (23/34 productos)
+```
+
+```{r}
+#conteos y promedios por duplas de características 
+
+mes_sku <-huawei_datos_limpios_completos%>%
+  group_by(mes_id, sku_id)%>%
+  summarise(ventas_totales_en_tienda_de_cada_sku=sum(ventas_totales), 
+            ventas_promedio_en_tienda_de_cada_sku = mean(ventas_totales))
+
+mes_sku
+
+#En el mes ____ y en el punto de venta ______, se tuvieron ______ ventas totales y se obtuvo un promedio de ventas de ________ (3778/1900 productos)
+```
+
+### Paso 2. Incluir variables en huawei_datos_limpios completos
+
+```{r}
+huawei_datos_limpios_completos <- left_join(huawei_datos_limpios_completos, mes_pdv, by=c("mes_id", "pdv_id"))
+huawei_datos_limpios_completos <- left_join(huawei_datos_limpios_completos, mes_sku, by=c("mes_id", "sku_id"))
+head(huawei_datos_limpios_completos)
+```
+
+### Paso 3. Crear Rezagos (3 tiempos)
+
+```{r}
+huawei_datos_limpios_completos <- huawei_datos_limpios_completos %>%
+  group_by(pdv_id, sku_id)%>%
+  mutate(
+    ventas_totales_1_mes_pasado = lag(ventas_totales, n=1), 
+    ventas_totales_2_meses_pasados = lag(ventas_totales, n=2), 
+    ventas_totales_3_meses_pasados = lag(ventas_totales, n=3), 
+    
+    ventas_totales_tienda_y_mes_del_mes_pasado = lag(ventas_totales_en_tienda_de_cada_mes, n=1), 
+    ventas_totales_tienda_y_mes_2_pasado = lag(ventas_totales_en_tienda_de_cada_mes, n=2),
+    ventas_totales_tienda_y_mes_3_pasado = lag(ventas_totales_en_tienda_de_cada_mes, n=3),
+    
+    ventas_promedio_tienda_y_mes_del_mes_pasado = lag(ventas_promedio_en_tienda_de_cada_mes, n=1), 
+    ventas_promedio_tienda_y_mes_2_pasado = lag(ventas_promedio_en_tienda_de_cada_mes, n=2),
+    ventas_promedio_tienda_y_mes_3_pasado = lag(ventas_promedio_en_tienda_de_cada_mes, n=3),
+  
+    ventas_totales_tienda_y_sku_del_mes_pasado = lag(ventas_totales_en_tienda_de_cada_sku, n=1), 
+    ventas_totales_tienda_y_sku_2_pasado = lag(ventas_totales_en_tienda_de_cada_sku, n=2),
+    ventas_totales_tienda_y_sku_3_pasado = lag(ventas_totales_en_tienda_de_cada_sku, n=3),
+    
+    ventas_promedio_tienda_y_sku_del_mes_pasado = lag(ventas_promedio_en_tienda_de_cada_sku, n=1), 
+    ventas_promedio_tienda_y_sku_2_pasado = lag(ventas_promedio_en_tienda_de_cada_sku, n=2),
+    ventas_promedio_tienda_y_sku_3_pasado = lag(ventas_promedio_en_tienda_de_cada_sku, n=3)) 
+
+head(huawei_datos_limpios_completos,20)
+```
+
+### Paso 4. NA - Rezagos
+
+```{r}
+# install.packages("zoo")
+```
+
+
+```{r}
+library(zoo)
+huawei_datos_limpios_completos<-na.locf(huawei_datos_limpios_completos, fromLast = TRUE) 
+head(huawei_datos_limpios_completos)
+```
+
+```{r}
+write.csv(huawei_datos_limpios_completos, file="huawei_datos_limpios_completos.csv", row.names = FALSE)
+```
+```{r}
+getwd()
+```
+
+#  descripción de para qué se utilizan los comandos:
+
+left_join():Es una operación de combinación entre dos marcos de datos donde la combinación da como resultado   las filas de una tabla (el lado izquierdo) y cualquier fila que coincida de la segunda tabla. Un left join en R NO devolverá valores de la segunda tabla que aún no existen en la primera tabla.
+ 
+
+merge(): Junta dos marcos de informacion en columnas o filas relacionándolos por columnas comunes o nombres de filas. 
+
+
+
+
+# ¿Por qué crees que  cambiamos algunas de nuestras variables categóricas a índices?
+Esto se hace con el objetivo de poder relacionar nuestras variables otorgandoles un indice y de esta manera generar nuevas variables que puedan ser utilis para el proyecto.

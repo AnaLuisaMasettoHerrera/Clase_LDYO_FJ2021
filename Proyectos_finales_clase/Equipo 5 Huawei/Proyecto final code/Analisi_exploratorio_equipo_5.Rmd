@@ -1,0 +1,85 @@
+---
+title: "Gráficos"
+author: "Brenda Rubio Rafael Loyola Fernanda Gutierrez Carlos Muñoz"
+date: "3/25/2021"
+output: html_document
+---
+```{r}
+library(tidyverse)
+```
+```{r}
+# install.packages("lattice")
+
+```
+Integrantes
+Brenda Aurora Rubio Villaseñor A01364693 
+Carlos Muñoz Villegas A01363608 
+María Fernanda Gutierrez A01367761 
+Rafael Loyola Franco A01365017
+
+
+Introducción
+El equipo está conformado por 4 integrantes, los cuales fueron mencionados anteriormente en el punto de integrantes. Este equipo está analizando la empresa de Huawei, la cual está dedicada al desarrollo de tecnología, en este caso el proyecto está enfocado en analizar la predicción de la demanda de los productos de telefonía que se venderán en distintos puntos de venta.
+Para poder visualizar los datos fue necesario realizar algunas gráficas con diferentes variables para poder comprender mejor el comportamiento y la situación durante los periodos registrados.
+
+Descripción de los datos
+Los datos que se presentan en este proyecto son un total de 369617 observaciones de 14 variables, en las cuales se incluyen 1899 Puntos de venta (caracter), Fecha en formato DD/MM/AAAA (caracter), Mes empezando por Junio del 2018 hasta Marzo del 2019 (numero), Anio incluyendo 2018 y 2019 (numero), Número de ventas estableciendo un 1 por cada registro de venta (Entero), 34 diferentes SKU o tipos de producto (caracter), 1 Marca establecida que es Huawei (caracter), 3 distintas Gammas las cuales son Baja, Media y Alta(caracter), 63 distintos registros de Costo promedio (número), 8 diferentes Zonas que cubre Huawei en México (caracter), 32 Estados dentro de la república (caracter), 288 Ciudades donde está presente Huawei (caracter), Latitud (número) y Longitud (número) de los puntos de venta dónde se encuentran.
+
+```{r}
+library(ggplot2)
+```
+```{r}
+library(lattice)
+```
+
+```{r}
+huawei_datos_limpios <- read.csv("C:/Users/rafa/Documents/7 mo/Lab optimizacion/huawei_databse_limpios.csv")
+head(huawei_datos_limpios)
+```
+
+```{r}
+huawei_datos_limpios$mes<- as.character(huawei_datos_limpios$mes)
+```
+
+
+```{r ,fig.height=10, fig.width=28}
+#(forcats::fct_infreq)
+#Si quiero darle un formato más limpio sin líneas de fondo con nombre de ejes 
+imagen_1 <- ggplot(huawei_datos_limpios, aes(x=forcats::fct_infreq(estado), fill=estado))+
+  geom_bar()+
+  theme_classic()+
+  ylab("ventas")+
+  xlab("estado")
+imagen_1
+```
+Gracias a esta gráfica podemos identificar visualmente que el mayor número de ventas se concentra en la Ciudad de México, seguido por el Estado de México y en tercer lugar se encuentra Jalisco. Guanajuato, Nuevo León y Veracruz le siguen y se puede ver que tienen un comportamiento de ventas bastante similar en cuanto a cantidad.
+
+```{r, fig.width=26}
+imagen_2 <- ggplot(huawei_datos_limpios, aes(x = estado)) + geom_bar(aes(fill=gamma), position = "dodge")+
+  theme_classic()
+imagen_2
+```
+En esta gráfica nos concentraremos en los estados de mayor relevancia en cuanto a número de ventas que pudimos identificar en la primera parte. Los 6 estados mencionados anteriormente, a pesar de ser los que tienen más ventas, se puede observar cómo la mayor parte de éstas se concentran en modelos de gamma baja, seguido por la media y al último la alta.
+
+
+```{r}
+imagen_3 <- pie(xtabs(~huawei_datos_limpios$anio),main = "Ventas por año", xlab="Año", col=c("hotpink","white"))
+imagen_3
+```
+Gracias a esta gráfica de pastel podemos identificar que las ventas de 2018 a 2019 redujeron drásticamente pues de los dos años, el 2018 abarca un poco más de 3/4 del total de ventas. Un buen punto será identificar el por qué la razón de esta fluctuación y tomar acción al respecto.
+
+
+
+
+```{r fig.width=15}
+huawei_datos_limpios %>%
+  tail(500) %>% 
+  ggplot( aes(x=costo_promedio, y=anio)) +
+   
+    geom_point(shape=20, color="black", fill="#69b3a2", size=8) + geom_smooth(method=lm)+
+ 
+    ggtitle("Evolution of cost")
+
+```
+En esta grafica podemos ver la tendencia que ha seguido el costo promedio a lo largo de los años, esto de  los últimos 500 datos, como éstos poseen una tendencia a la alza y una correlación positiva dado que conforme va a aumentado la variable de año y pasa el tiempo, de igual manera el costo promedio de los productos aumenta.
+
