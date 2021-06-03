@@ -1,0 +1,125 @@
+---
+title: "Primer Avance Proyecto"
+author: "Carlos Galvez"
+date: "3/1/2021"
+output: html_document
+---
+
+#Llamar libreria
+
+```{r}
+library(tidyverse)
+```
+
+#Leer Datos
+
+```{r}
+hisense_datos <- read.csv("equipo_3_hisense_datos_sucios.csv")
+head(hisense_datos)
+```
+
+#Analisis datos
+
+```{r}
+str(hisense_datos)
+```
+
+```{r}
+summary(hisense_datos)
+```
+
+```{r}
+tipos_punto_venta <- hisense_datos %>% select(punto_de_venta) %>% unique()
+tipos_punto_venta
+```
+#19 113 235 9602 376
+
+```{r}
+hisense_datos$punto_de_venta <- str_replace(hisense_datos$punto_de_venta, "acayuckan", "acayucan")
+hisense_datos$punto_de_venta <- str_replace(hisense_datos$punto_de_venta, "ACE MEGA IGUALA", "ace mega iguala")
+hisense_datos$punto_de_venta <- str_replace(hisense_datos$punto_de_venta, "alianza MADERO", "alianza madero")
+hisense_datos$punto_de_venta <- str_replace(hisense_datos$punto_de_venta, "tda cdmx mazaryk", "tda cdmx masaryk seneca")
+hisense_datos$punto_de_venta <- str_replace(hisense_datos$punto_de_venta, "bca forum curnavaca cva", "bca forum cuernavaca cva")
+```
+
+```{r}
+tipos_punto_venta
+```
+
+```{r}
+marca_datps <- hisense_datos %>% select(anio) %>% unique()
+marca_datps
+```
+```{r}
+marca_datps <- hisense_datos %>% select(marca) %>% unique()
+marca_datps
+```
+```{r}
+hisense_datos$mes <- str_replace(hisense_datos$mes, "AGOST", "8")
+hisense_datos$mes <- str_replace(hisense_datos$mes, "FEB", "2")
+hisense_datos$mes <- str_replace(hisense_datos$mes, "JUL", "7")
+hisense_datos$mes <- str_replace(hisense_datos$mes, "JUN", "6")
+```
+```{r}
+marca_datps <- hisense_datos %>% select(mes) %>% unique()
+marca_datps
+```
+
+```{r}
+hisense_datos$mes<-as.numeric(hisense_datos$mes)
+```
+```{r}
+anio_datos <- hisense_datos %>% select(anio) %>% unique()
+anio_datos
+```
+
+```{r}
+hisense_datos$anio <- str_replace(hisense_datos$anio, "19", "2019")
+```
+
+```{r}
+hisense_datos$anio <- str_replace(hisense_datos$anio, "202019", "2019")
+```
+
+```{r}
+marca_datps <- hisense_datos %>% select(marca) %>% unique()
+marca_datps
+```
+
+```{r}
+hisense_datos$marca <- str_replace(hisense_datos$marca, "Hisense", "hisense")
+hisense_datos$marca <- str_replace(hisense_datos$marca, "hisense-hisense", "hisense")
+hisense_datos$marca <- str_replace(hisense_datos$marca, "HISENSE", "hisense")
+hisense_datos$marca <- str_replace(hisense_datos$marca, "hhisense", "hisense")
+hisense_datos$marca <- str_replace(hisense_datos$marca, "hisense-Hisense", "hisense")
+
+```
+```{r}
+marca_zona <- hisense_datos %>% select(zona) %>% unique()
+marca_zona
+```
+```{r}
+hisense_datos$zona <- str_replace(hisense_datos$zona,"GOLF DE MEXICO", "golfo de mexico")
+```
+```{r}
+marca_estado <- hisense_datos %>% select(estado) %>% unique()
+marca_estado
+```
+
+```{r}
+hisense_datos$estado <- str_replace(hisense_datos$estado, "ecatepec", "estado de mexico")
+hisense_datos$estado <- str_replace(hisense_datos$estado, "merida", "yucatan")
+hisense_datos$estado <- str_replace(hisense_datos$estado, "tuxtla gutierrez", "chiapas")
+```
+```{r}
+summary(hisense_datos)
+```
+```{r}
+hisense_datos[276,13]<-19.58275
+hisense_datos[276,13]
+```
+```{r}
+hisense_datos[276,14]<- -99.0229
+hisense_datos[276,14]
+```
+
