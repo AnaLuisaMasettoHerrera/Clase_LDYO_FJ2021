@@ -1,0 +1,109 @@
+---
+title: "Ej_KNN"
+author: "César Cerón"
+date: "4/10/2021"
+output: html_document
+---
+```{r}
+data(iris)
+```
+
+```{r}
+head(iris)
+```
+
+```{r}
+dim(iris)
+```
+
+#Tomamos esta función para que los datos que todos tomamos sean los mismos
+```{r}
+set.seed(50)
+```
+
+#Siguientes funciones tomamos 100 datos y de ahí 50 para el entrenamiento y 50 para hacer el test
+```{r}
+ind_muestra <- sample(150,100)
+```
+
+```{r}
+ind_entrenamiento <- sample(ind_muestra, 50)
+```
+
+```{r}
+ind_test <- ind_muestra[!ind_muestra %in% ind_entrenamiento]
+```
+
+
+#Se construye el set de datos para los entrenamientos y para el test
+```{r}
+i_entrenamiento <- iris[ind_entrenamiento, ]
+i_test <- iris[ind_test, ]
+
+entrenamiento_input <- i_entrenamiento[, -5]
+entrenamiento_output <- i_entrenamiento[, 5]
+
+test_input <- i_test[, -5]
+test_output <- i_test[, 5]
+```
+
+
+#Podriamos construir el algoritmo para obtener las distancias mínimas. Sin embargo, la librería Class ya incluye y aprovecharemos su función para el algoritmo
+```{r}
+#install.packages("class")
+library(class)
+```
+
+
+#Se toman los datos de entrenamiento para crear el modelo. Después se prueba para hacer la predicción.
+#k = Cuántos vecinos cercanos buscará para predecir.
+```{r}
+test_model_KNN <- knn(train=entrenamiento_input,
+                      cl=entrenamiento_output,
+                      test = test_input,
+                      k = 3)
+test_model_KNN
+```
+
+
+#Comparamos la predicción con el output del test para conocer la exactitud.
+```{r}
+mean(test_model_KNN == test_output)
+```
+# 94%
+
+
+#Matriz de confusión. Cuántos valores predichos fueron iguales a los reales.
+```{r}
+table(test_model_KNN, test_output)
+```
+#El modelo predice 15 "setosa" = dato real en los datos
+#16 "versicolor", pero, solamente son 14, y 2 son "virginica"
+#19 "virginica", 1 mas del real en los datos
+
+
+```{r}
+library(tidyverse)
+```
+
+
+#Tenemos 50 valores en nuestros datos para entrenar el modelo. Veremos a continuación cuánto acierto se tiene al cambiar k
+```{r}
+k <- 1:50
+resultado <- data.frame(k, precision = 0)
+
+for(n in k){
+  test_model_KNN <- knn(train= entrenamiento_input,
+                        cl= entrenamiento_output,
+                        test= test_input,
+                        k= n)
+  
+  resultado$precision[n] <- mean(test_model_KNN == test_output)
+}
+
+resultado %>% 
+  ggplot() +
+  aes(k, precision) +
+  geom_line()
+```
+#Dependerá de cada problema el tomar k óptimo.
